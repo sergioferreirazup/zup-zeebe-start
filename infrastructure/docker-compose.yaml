@@ -1,0 +1,186 @@
+version: "3"
+
+volumes:
+  zeebe-0: {}
+  zeebe-1: {}
+  zeebe-2: {}
+  zeebe:
+    driver: local
+  elastic:
+    driver: local
+
+services:
+
+  gateway:
+    restart: always
+    container_name: gateway
+    image: camunda/zeebe:${ZEEBE_VERSION:-1.3.1}
+    ports:
+      - "26500:26500"
+      - "9600:9600"
+    environment:
+      - ZEEBE_STANDALONE_GATEWAY=true
+      - ZEEBE_GATEWAY_NETWORK_HOST=0.0.0.0
+      - ZEEBE_GATEWAY_NETWORK_PORT=26500
+      - ZEEBE_GATEWAY_CLUSTER_CONTACTPOINT=zeebe-0:26502
+      - ZEEBE_GATEWAY_CLUSTER_PORT=26502
+      - ZEEBE_GATEWAY_CLUSTER_MEMBERID=gateway
+      - ZEEBE_GATEWAY_CLUSTER_HOST=gateway
+      - ZEEBE_GATEWAY_CLUSTER_SECURITY_ENABLED=false
+    networks:
+      - zeebe-cloud
+    depends_on:
+      - zeebe-0
+      - zeebe-1
+      - zeebe-2
+
+  zeebe-0:
+    image: camunda/zeebe:${ZEEBE_VERSION:-1.3.1}
+    container_name: broker0
+    environment:
+      - ZEEBE_BROKER_CLUSTER_NODEID=0
+      - ZEEBE_BROKER_CLUSTER_PARTITIONSCOUNT=${ZEEBE_PARTITIONSCOUNT:-2}
+      - ZEEBE_BROKER_CLUSTER_CLUSTERSIZE=${ZEEBE_CLUSTERSIZE:-3}
+      - ZEEBE_BROKER_CLUSTER_REPLICATIONFACTOR=${ZEEBE_REPLICATIONFACTOR:-3}
+      - ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS=zeebe-0:26502,zeebe-1:26502,zeebe-2:26502
+      - ZEEBE_BROKER_GATEWAY_ENABLE=false
+      - ZEEBE_BROKER_NETWORK_INTERNALAPI_PORT=26502
+      - ZEEBE_BROKER_NETWORK_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_GATEWAY_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_CLASSNAME=io.camunda.zeebe.exporter.ElasticsearchExporter
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_URL=http://elasticsearch:9200
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_BULK_SIZE=1
+    volumes:
+      - zeebe-0:/usr/local/zeebe/data
+    networks:
+      - zeebe-cloud
+    depends_on:
+      - elasticsearch
+
+  zeebe-1:
+    image: camunda/zeebe:${ZEEBE_VERSION:-1.3.1}
+    container_name: broker1
+    environment:
+      - ZEEBE_BROKER_CLUSTER_NODEID=1
+      - ZEEBE_BROKER_CLUSTER_PARTITIONSCOUNT=${ZEEBE_PARTITIONSCOUNT:-2}
+      - ZEEBE_BROKER_CLUSTER_CLUSTERSIZE=${ZEEBE_CLUSTERSIZE:-3}
+      - ZEEBE_BROKER_CLUSTER_REPLICATIONFACTOR=${ZEEBE_REPLICATIONFACTOR:-3}
+      - ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS=zeebe-0:26502,zeebe-1:26502,zeebe-2:26502
+      - ZEEBE_BROKER_GATEWAY_ENABLE=false
+      - ZEEBE_BROKER_NETWORK_INTERNALAPI_PORT=26502
+      - ZEEBE_BROKER_NETWORK_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_GATEWAY_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_CLASSNAME=io.camunda.zeebe.exporter.ElasticsearchExporter
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_URL=http://elasticsearch:9200
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_BULK_SIZE=1
+    volumes:
+      - zeebe-1:/usr/local/zeebe/data
+    networks:
+      - zeebe-cloud
+    depends_on:
+      - elasticsearch
+
+  zeebe-2:
+    image: camunda/zeebe:${ZEEBE_VERSION:-1.3.1}
+    container_name: broker2
+    environment:
+      - ZEEBE_BROKER_CLUSTER_NODEID=2
+      - ZEEBE_BROKER_CLUSTER_PARTITIONSCOUNT=${ZEEBE_PARTITIONSCOUNT:-2}
+      - ZEEBE_BROKER_CLUSTER_CLUSTERSIZE=${ZEEBE_CLUSTERSIZE:-3}
+      - ZEEBE_BROKER_CLUSTER_REPLICATIONFACTOR=${ZEEBE_REPLICATIONFACTOR:-3}
+      - ZEEBE_BROKER_CLUSTER_INITIALCONTACTPOINTS=zeebe-0:26502,zeebe-1:26502,zeebe-2:26502
+      - ZEEBE_BROKER_GATEWAY_ENABLE=false
+      - ZEEBE_BROKER_NETWORK_INTERNALAPI_PORT=26502
+      - ZEEBE_BROKER_NETWORK_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_GATEWAY_SECURITY_ENABLED=false
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_CLASSNAME=io.camunda.zeebe.exporter.ElasticsearchExporter
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_URL=http://elasticsearch:9200
+      - ZEEBE_BROKER_EXPORTERS_ELASTICSEARCH_ARGS_BULK_SIZE=1
+    volumes:
+      - zeebe-2:/usr/local/zeebe/data
+    networks:
+      - zeebe-cloud
+    depends_on:
+      - elasticsearch
+
+  operate:
+    image: camunda/operate:${ZEEBE_VERSION:-1.3.1}
+    container_name: operate
+    environment:
+      - CAMUNDA_OPERATE_ZEEBE_GATEWAYADDRESS=gateway:26500
+      - CAMUNDA_OPERATE_ELASTICSEARCH_URL=http://elasticsearch:9200
+      - CAMUNDA_OPERATE_ZEEBEELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - 8080:8080
+    depends_on:
+      - gateway
+      - elasticsearch
+    volumes:
+      - ./operate/application.yml:/usr/local/operate/config/application.yml
+    networks:
+      - zeebe-cloud
+
+  postgres:
+    image: postgres:11.12
+    hostname: postgres
+    domainname: postgres
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=zeebe_poc
+      - POSTGRES_USER=zeebe_poc
+      - POSTGRES_PASSWORD=zeebe_poc
+    volumes:
+      - ./database/setup.sql:/docker-entrypoint-initdb.d/setup.sql
+    network_mode: host
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_VERSION:-7.16.1}
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+    environment:
+      - cluster.name=camunda-cloud
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms256m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - zeebe-cloud
+    volumes:
+      - elastic:/usr/share/elasticsearch/data
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    links:
+      - zeebe-1
+    volumes:
+      - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+    networks:
+      - zeebe-cloud
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=pass
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/conf/grafana.ini:/etc/grafana/grafana.ini
+    networks:
+      - zeebe-cloud
+    depends_on:
+      - prometheus
+
+networks:
+  zeebe-cloud:
+    driver: bridge

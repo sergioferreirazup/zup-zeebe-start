@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.6.0">
+  <bpmn:process id="install_entitlements_v3" name="install_entitlements_v3" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1_v3">
+      <bpmn:outgoing>SequenceFlow_1la5erf_v3</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1la5erf_v3" sourceRef="StartEvent_1_v3" targetRef="DECIDE_ENTITLEMENTS_v3" />
+    <bpmn:exclusiveGateway id="__VERIFY_EXECUTE_ENTITLEMENTS__v3" name="Precisa executar entitlements?" camunda:asyncBefore="true" default="SequenceFlow_0kk9llo_v3">
+      <bpmn:incoming>SequenceFlow_0xa1ww6_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1urqd58_v3</bpmn:outgoing>
+      <bpmn:outgoing>SequenceFlow_0kk9llo_v3</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="SequenceFlow_0xa1ww6_v3" sourceRef="DECIDE_ENTITLEMENTS_v3" targetRef="__VERIFY_EXECUTE_ENTITLEMENTS__v3" />
+    <bpmn:sequenceFlow id="SequenceFlow_1urqd58_v3" name="Sim" sourceRef="__VERIFY_EXECUTE_ENTITLEMENTS__v3" targetRef="CREATE_SERVICE_ORDER_LIST_v3">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${ENTITLEMENT_EXECUTE == 'TRUE'}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:sequenceFlow id="SequenceFlow_0x1qhlo_v3" sourceRef="INSTALL_ENTITLEMENTS_v3" targetRef="INSTALL_WIFI_v3" />
+    <bpmn:sequenceFlow id="SequenceFlow_1w17ej9_v3" sourceRef="INSTALL_WIFI_v3" targetRef="INSTALL_RECON_v3" />
+    <bpmn:endEvent id="EndEvent_0rgq0xg_v3">
+      <bpmn:incoming>SequenceFlow_0kk9llo_v3</bpmn:incoming>
+      <bpmn:incoming>SequenceFlow_0uaf0jv_v3</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_0kk9llo_v3" name="Não" sourceRef="__VERIFY_EXECUTE_ENTITLEMENTS__v3" targetRef="EndEvent_0rgq0xg_v3" />
+    <bpmn:serviceTask id="DECIDE_ENTITLEMENTS_v3" name="Check Executar Entitlements" camunda:asyncBefore="true" camunda:delegateExpression="${checkEntitlementsTaskV3}">
+      <bpmn:incoming>SequenceFlow_1la5erf_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0xa1ww6_v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="INSTALL_ENTITLEMENTS_v3" name="Instala Entitlements" camunda:asyncBefore="true" camunda:delegateExpression="${installEntitlementTaskV3}">
+      <bpmn:incoming>SequenceFlow_0l0d16j_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0x1qhlo_v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="INSTALL_WIFI_v3" name="Instala Wifi" camunda:asyncBefore="true" camunda:delegateExpression="${installWifiTaskV3}">
+      <bpmn:incoming>SequenceFlow_0x1qhlo_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1w17ej9_v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="INSTALL_RECON_v3" name="Instala Recon" camunda:asyncBefore="true" camunda:delegateExpression="${installReconTaskV3}">
+      <bpmn:incoming>SequenceFlow_1w17ej9_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_1e7kw2l_v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0l0d16j_v3" sourceRef="CREATE_SERVICE_ORDER_LIST_v3" targetRef="INSTALL_ENTITLEMENTS_v3" />
+    <bpmn:serviceTask id="CREATE_SERVICE_ORDER_LIST_v3" name="Cria lista de Service Order" camunda:asyncBefore="true" camunda:delegateExpression="${createServiceOrderTaskV3}">
+      <bpmn:incoming>SequenceFlow_1urqd58_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0l0d16j_v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_0uaf0jv_v3" sourceRef="UPDATE_ENTITLEMENT_CUSTOMER_v3" targetRef="EndEvent_0rgq0xg_v3" />
+    <bpmn:serviceTask id="UPDATE_ENTITLEMENT_CUSTOMER_v3" name="Atualiza Entitlement Customer" camunda:asyncBefore="true" camunda:delegateExpression="${updateEntitlementCustomerTaskV3}">
+      <bpmn:incoming>SequenceFlow_1e7kw2l_v3</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_0uaf0jv_v3</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:sequenceFlow id="SequenceFlow_1e7kw2l_v3" sourceRef="INSTALL_RECON_v3" targetRef="UPDATE_ENTITLEMENT_CUSTOMER_v3" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="install_entitlements_v3">
+      <bpmndi:BPMNEdge id="SequenceFlow_1e7kw2l_di" bpmnElement="SequenceFlow_1e7kw2l_v3">
+        <di:waypoint x="1283" y="190" />
+        <di:waypoint x="1357" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1275" y="98.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0uaf0jv_di" bpmnElement="SequenceFlow_0uaf0jv_v3">
+        <di:waypoint x="1457" y="190" />
+        <di:waypoint x="1535" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1496" y="99" width="0" height="12" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0l0d16j_di" bpmnElement="SequenceFlow_0l0d16j_v3">
+        <di:waypoint x="752" y="190" />
+        <di:waypoint x="824" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="743" y="98.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0kk9llo_di" bpmnElement="SequenceFlow_0kk9llo_v3">
+        <di:waypoint x="522" y="165" />
+        <di:waypoint x="522" y="106" />
+        <di:waypoint x="1553" y="106" />
+        <di:waypoint x="1553" y="172" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1029" y="85" width="21" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1w17ej9_di" bpmnElement="SequenceFlow_1w17ej9_v3">
+        <di:waypoint x="1107" y="190" />
+        <di:waypoint x="1183" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1100" y="98.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0x1qhlo_di" bpmnElement="SequenceFlow_0x1qhlo_v3">
+        <di:waypoint x="924" y="190" />
+        <di:waypoint x="1007" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="920.5" y="98.5" width="90" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1urqd58_di" bpmnElement="SequenceFlow_1urqd58_v3">
+        <di:waypoint x="547" y="190" />
+        <di:waypoint x="652" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="591" y="168" width="19" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_0xa1ww6_di" bpmnElement="SequenceFlow_0xa1ww6_v3">
+        <di:waypoint x="404" y="190" />
+        <di:waypoint x="497" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="450.5" y="98.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1la5erf_di" bpmnElement="SequenceFlow_1la5erf_v3">
+        <di:waypoint x="209" y="190" />
+        <di:waypoint x="304" y="190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="256.5" y="98.5" width="0" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1_v3">
+        <dc:Bounds x="173" y="172" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ExclusiveGateway_02dwq74_di" bpmnElement="__VERIFY_EXECUTE_ENTITLEMENTS__v3" isMarkerVisible="true">
+        <dc:Bounds x="497" y="165" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="486" y="218" width="83" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_0rgq0xg_di" bpmnElement="EndEvent_0rgq0xg_v3">
+        <dc:Bounds x="1535" y="172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1543" y="141" width="21" height="13" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1irm05m_di" bpmnElement="DECIDE_ENTITLEMENTS_v3">
+        <dc:Bounds x="304" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0horydx_di" bpmnElement="INSTALL_ENTITLEMENTS_v3">
+        <dc:Bounds x="824" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_0hatw7x_di" bpmnElement="INSTALL_WIFI_v3">
+        <dc:Bounds x="1007" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_18xo4qu_di" bpmnElement="INSTALL_RECON_v3">
+        <dc:Bounds x="1183" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1wolxkv_di" bpmnElement="CREATE_SERVICE_ORDER_LIST_v3">
+        <dc:Bounds x="652" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_1w6ays7_di" bpmnElement="UPDATE_ENTITLEMENT_CUSTOMER_v3">
+        <dc:Bounds x="1357" y="150" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

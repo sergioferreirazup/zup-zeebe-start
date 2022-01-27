@@ -1,0 +1,22 @@
+server:
+  port: 8000
+
+zeebe:
+  client:
+    gateway.address: 127.0.0.1:26500
+    security.plaintext: true
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  datasource:
+    initialization-mode: always
+    platform: postgres
+    url: jdbc:postgresql://localhost:5432/zeebe_poc
+    username: zeebe_poc
+    password: zeebe_poc
+
+  flyway:
+    baseline-on-migrate: true
